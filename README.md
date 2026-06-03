@@ -40,6 +40,99 @@ pip install -e .
 python -m pytest -q
 ```
 
+## Agent 安装命令
+
+以下命令只安装本项目本身，适合让各类 Agent 通过终端调用 `yijing-stock` 或 `python scripts/run_yijing_stock.py`。
+
+### 通用 CLI 安装
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/chichenji/yijing-stock-analysis.git
+cd yijing-stock-analysis
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e .
+yijing-stock 000725.SZ --output html
+```
+
+macOS / Linux：
+
+```bash
+git clone https://github.com/chichenji/yijing-stock-analysis.git
+cd yijing-stock-analysis
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+yijing-stock 000725.SZ --output html
+```
+
+### Codex 本地技能目录
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/chichenji/yijing-stock-analysis.git "$env:USERPROFILE\.codex\skills\yijing-stock-analysis"
+cd "$env:USERPROFILE\.codex\skills\yijing-stock-analysis"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e .
+```
+
+macOS / Linux：
+
+```bash
+git clone https://github.com/chichenji/yijing-stock-analysis.git ~/.codex/skills/yijing-stock-analysis
+cd ~/.codex/skills/yijing-stock-analysis
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### Claude Code 本地技能目录
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/chichenji/yijing-stock-analysis.git "$env:USERPROFILE\.claude\skills\yijing-stock-analysis"
+cd "$env:USERPROFILE\.claude\skills\yijing-stock-analysis"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e .
+```
+
+macOS / Linux：
+
+```bash
+git clone https://github.com/chichenji/yijing-stock-analysis.git ~/.claude/skills/yijing-stock-analysis
+cd ~/.claude/skills/yijing-stock-analysis
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### 其他 Agent 通用接入
+
+对 Gemini CLI、Cursor、Continue、本地 Agent Runner 等能调用终端命令的工具，可以安装到任意固定目录：
+
+```bash
+git clone https://github.com/chichenji/yijing-stock-analysis.git ~/agents/yijing-stock-analysis
+cd ~/agents/yijing-stock-analysis
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+yijing-stock 000725.SZ --question "未来三天走势如何？" --output markdown
+```
+
+Agent 调用时可使用：
+
+```bash
+yijing-stock 000725.SZ --output markdown
+yijing-stock 000725.SZ --output json
+yijing-stock 000725.SZ --output html
+```
+
 ## 快速使用
 
 生成 Markdown 报告：
