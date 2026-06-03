@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "YijingStockAnalysisInput",
+  "type": "object",
+  "required": ["ticker"],
+  "additionalProperties": false,
+  "properties": {
+    "ticker": { "type": "string", "minLength": 1 },
+    "question": { "type": "string", "default": "未来三天走势如何？" },
+    "horizon": { "type": "string", "default": "3d" },
+    "cast_method": { "type": "string", "enum": ["time", "numbers", "ticker", "market", "auto"], "default": "time" },
+    "numbers": { "type": "array", "items": { "type": "integer" }, "default": [] },
+    "pure_yijing": { "type": "boolean", "default": false },
+    "output_format": { "type": "string", "enum": ["markdown", "json", "html"], "default": "markdown" },
+    "market": { "type": "object", "additionalProperties": true, "default": {} },
+    "news": { "type": "object", "additionalProperties": true, "default": {} },
+    "macro": { "type": "object", "additionalProperties": true, "default": {} },
+    "as_of": { "type": "string", "format": "date-time" }
+  }
+}

@@ -23,8 +23,12 @@
 - 六十四卦股票象意参考库。
 - 多空偏性和阶段分布统计。
 - 技术面、资金面、新闻面、宏观面校验。
+- 周易序号、上下经、卦辞摘义、象辞摘义和动爻爻位解释。
+- 可解释评分拆解：展示权重、贡献和加减分理由。
+- 数据源状态追踪：展示成功、缺失、字段覆盖率和错误说明。
 - Markdown、JSON、HTML 三种输出。
-- 预测记录与复盘数据结构。
+- 预测记录 JSONL、复盘统计、批量分析和个股卦象画像。
+- Agent 输入/输出 Schema、调用模板和示例数据。
 
 ## 安装
 
@@ -131,6 +135,9 @@ Agent 调用时可使用：
 yijing-stock 000725.SZ --output markdown
 yijing-stock 000725.SZ --output json
 yijing-stock 000725.SZ --output html
+yijing-stock 000725.SZ --record records/predictions.jsonl --output json
+yijing-stock batch examples/tickers.txt --pure-yijing --output html
+yijing-stock profile 000725.SZ --records records/predictions.jsonl --output json
 ```
 
 ## 快速使用
@@ -165,6 +172,30 @@ python scripts/run_yijing_stock.py 000725.SZ --pure-yijing
 python scripts/run_yijing_stock.py 000725.SZ --cast-method numbers --numbers 7 3 5
 ```
 
+记录预测：
+
+```bash
+yijing-stock 000725.SZ --output json --record records/predictions.jsonl
+```
+
+批量分析：
+
+```bash
+yijing-stock batch examples/tickers.txt --pure-yijing --output html > batch_report.html
+```
+
+个股卦象画像：
+
+```bash
+yijing-stock profile 000725.SZ --records records/predictions.jsonl --output markdown
+```
+
+复盘 JSONL 记录：
+
+```bash
+python scripts/backtest.py records/predictions.jsonl examples/prices.json
+```
+
 ## CLI 参数
 
 - `ticker`：股票代码，例如 `000725.SZ`、`600519.SH`。
@@ -177,6 +208,19 @@ python scripts/run_yijing_stock.py 000725.SZ --cast-method numbers --numbers 7 3
 - `--market-json`：外部行情数据。
 - `--news-json`：外部新闻数据。
 - `--macro-json`：外部宏观数据。
+- `--record`：把本次分析追加写入 JSONL 记录文件。
+
+批量命令：
+
+- `yijing-stock batch <tickers_file>`：读取股票列表，输出横向对比。
+- `--output`：批量输出可选 `markdown`、`json`、`html`。
+- `--record`：把批量结果逐条追加到 JSONL。
+
+画像命令：
+
+- `yijing-stock profile <ticker>`：从记录文件生成个股卦象画像。
+- `--records`：JSONL 记录路径，默认 `records/predictions.jsonl`。
+- `--output`：画像输出可选 `markdown`、`json`。
 
 ## 报告结构
 
@@ -188,6 +232,10 @@ HTML 报告包含：
 - 后势变局：变卦。
 - 反证风险：错卦。
 - 五卦细断：本卦、变卦、互卦、错卦、综卦。
+- 经典摘义：周易序号、上下经、卦辞摘义、象辞摘义。
+- 动爻爻位：位置含义、股票白话、确认信号、风险信号。
+- 评分拆解：易经、技术、资金、新闻、宏观的权重、贡献和理由。
+- 来源状态：行情、新闻、宏观的 provider、状态、字段覆盖率和错误说明。
 - 现实校验：技术、资金、新闻、宏观。
 - 体用与五行。
 - 六十四卦全象参考。
@@ -199,6 +247,9 @@ HTML 报告包含：
 - 上卦、下卦。
 - 五行。
 - 动爻。
+- 周易序号与上下经。
+- 卦辞摘义和象辞摘义。
+- 动爻爻位、确认信号和风险信号。
 - 卦象短语。
 - 股市象意。
 - 白话解释。
@@ -233,9 +284,21 @@ python scripts/run_yijing_stock.py 000725.SZ \
   --output html
 ```
 
+这些示例文件已经包含在 `examples/` 目录。Agent 可参考：
+
+- `schemas/analysis_input.schema.json`
+- `schemas/analysis_result.schema.json`
+- `prompts/agent_usage.md`
+
 ## 复盘
 
-项目保留复盘数据结构，用于记录每次研判的输入、卦象、评分、建议和后续实际表现。建议按同一股票、同一周期持续复盘，观察卦象判断与现实走势之间的偏差。
+项目支持把每次研判写入 JSONL，用于记录输入、卦象、评分、建议、来源状态和后续实际表现。建议按同一股票、同一周期持续复盘，观察卦象判断与现实走势之间的偏差。
+
+```bash
+yijing-stock 000725.SZ --output json --record records/predictions.jsonl
+python scripts/backtest.py records/predictions.jsonl examples/prices.json
+yijing-stock profile 000725.SZ --records records/predictions.jsonl
+```
 
 ## 项目结构
 
@@ -243,12 +306,19 @@ python scripts/run_yijing_stock.py 000725.SZ \
 src/yijing_stock_analysis/
   cast.py              起卦逻辑
   cast_trace.py        起卦过程说明
+  classic_text.py      周易序号、经典摘义、动爻解释
   hexagrams.py         六十四卦基础映射
   hexagram_reference.py 六十四卦股票象意参考
   relations.py         互卦、错卦、综卦、体用关系
   scoring.py           综合评分
+  score_breakdown.py   评分拆解
+  records.py           JSONL 预测记录
+  batch.py             批量分析
+  profile.py           个股卦象画像
   report.py            Markdown / JSON 输出
-  report_html.py       HTML 报告输出
+  report_html.py       HTML 报告入口
+  html_sections.py     HTML 报告结构
+  html_styles.py       HTML 样式
   engine.py            分析引擎
 ```
 

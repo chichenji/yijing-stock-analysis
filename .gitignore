@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+records/
 node_modules/
 boe_yijing_*_check.png
 *_yijing_report.html

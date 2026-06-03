@@ -7,6 +7,10 @@ name = "yijing-stock-analysis"
 version = "0.1.0"
 description = "易经多卦象股票分析 Skill"
 requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0",
+    "requests>=2.31",
+]
 
 [project.scripts]
 yijing-stock = "yijing_stock_analysis.cli:main"

@@ -60,6 +60,8 @@ class HexagramSnapshot:
     bias: str
     stage: str
     lines: tuple[int, ...]
+    classic: Dict[str, Any] = field(default_factory=dict)
+    moving_line_detail: Dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -78,6 +80,7 @@ class ScoreCard:
     confidence_label: str
     risk_level: str
     suggestion: str
+    breakdown: Dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)

@@ -1,0 +1,14 @@
+{
+  "data_source": "manual-example",
+  "sentiment_index": 64,
+  "sentiment_class": "积极",
+  "flow_score": 72,
+  "viral_k": 1.32,
+  "items": [
+    {
+      "title": "面板行业景气度修复",
+      "source": "example",
+      "publish_time": "2026-06-04 09:30:00"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping
 
 from .hexagrams import HexagramProfile
+from .score_breakdown import build_score_breakdown
 from .stock_mapping import profile_hint
 from .wuxing import relation_score, summarize
 
@@ -216,6 +217,13 @@ def build_score_card(
     news_score, news_detail = score_news(news)
     macro_score, macro_detail = score_macro(macro)
     final = _final_score(weights, (yijing, technical, capital, news_score, macro_score))
+    breakdown = build_score_breakdown(
+        {"main": main, "changed": changed, "mutual": mutual, "opposite": opposite},
+        {"body": body, "use": use},
+        weights.__dict__,
+        {"yijing": yijing, "technical": technical, "capital": capital, "news": news_score, "macro": macro_score},
+        {"technical": technical_detail, "capital": capital_detail, "news": news_detail, "macro": macro_detail},
+    )
     hint = profile_hint(main)
     direction = hint["direction"]
     confidence_pct = int(round(clamp(final)))
@@ -232,5 +240,6 @@ def build_score_card(
         "confidence_label": confidence_label,
         "risk_level": risk_level,
         "suggestion": suggestion,
+        "breakdown": breakdown,
     }
     return score_card, technical_detail, capital_detail, news_detail, macro_detail, {"weights": weights.__dict__}

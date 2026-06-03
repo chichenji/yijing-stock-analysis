@@ -48,14 +48,45 @@ def attach_review_windows(result: Mapping[str, Any], prices: Sequence[float]) ->
     return payload
 
 
+def review_records(records: Sequence[Mapping[str, Any]], prices: Mapping[str, Any] | Sequence[float]) -> tuple[Dict[str, Any], ...]:
+    reviewed = []
+    for record in records:
+        reviewed.append(attach_review_windows(record, _prices_for_record(record, prices)))
+    return tuple(reviewed)
+
+
 def summarize_records(records: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     total = len(records)
-    hits = 0
-    for record in records:
-        if record.get("review_windows", {}).get("3d", {}).get("hit"):
-            hits += 1
     return {
         "total": total,
-        "hit_rate_3d": round(hits / total * 100, 2) if total else 0.0,
+        "hit_rate_1d": _hit_rate(records, "1d"),
+        "hit_rate_3d": _hit_rate(records, "3d"),
+        "hit_rate_5d": _hit_rate(records, "5d"),
+        "main_hexagrams": _count_path(records, ("main_hexagram", "name")),
+        "bias_distribution": _count_path(records, ("main_hexagram", "bias")),
+        "body_use_relations": _count_path(records, ("body_use", "relation")),
     }
 
+
+def _prices_for_record(record: Mapping[str, Any], prices: Mapping[str, Any] | Sequence[float]) -> Sequence[float]:
+    if isinstance(prices, Mapping):
+        ticker = str(record.get("ticker", "")).upper()
+        return tuple(map(float, prices.get(ticker, ())))
+    return tuple(map(float, prices))
+
+
+def _hit_rate(records: Sequence[Mapping[str, Any]], window: str) -> float:
+    hits = [record.get("review_windows", {}).get(window, {}).get("hit") for record in records]
+    judged = [item for item in hits if item is not None]
+    if not judged:
+        return 0.0
+    return round(sum(1 for item in judged if item) / len(judged) * 100, 2)
+
+
+def _count_path(records: Sequence[Mapping[str, Any]], path: tuple[str, str]) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for record in records:
+        value = record.get(path[0], {}).get(path[1])
+        if value is not None:
+            counts[str(value)] = counts.get(str(value), 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))

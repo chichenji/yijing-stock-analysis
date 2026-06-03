@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "YijingStockAnalysisResult",
+  "type": "object",
+  "required": ["ticker", "main_hexagram", "changed_hexagram", "scores", "source_trace", "review_windows"],
+  "additionalProperties": true,
+  "properties": {
+    "ticker": { "type": "string" },
+    "question": { "type": "string" },
+    "horizon": { "type": "string" },
+    "cast_method": { "type": "string" },
+    "time": { "type": "string" },
+    "partial": { "type": "boolean" },
+    "missing_fields": { "type": "array", "items": { "type": "string" } },
+    "main_hexagram": { "$ref": "#/$defs/hexagram" },
+    "changed_hexagram": { "$ref": "#/$defs/hexagram" },
+    "mutual_hexagram": { "$ref": "#/$defs/hexagram" },
+    "opposite_hexagram": { "$ref": "#/$defs/hexagram" },
+    "reversed_hexagram": { "$ref": "#/$defs/hexagram" },
+    "scores": { "$ref": "#/$defs/scores" },
+    "source_trace": { "$ref": "#/$defs/sourceTrace" },
+    "review_windows": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "hexagram": {
+      "type": "object",
+      "required": ["name", "upper", "lower", "moving_line", "classic", "moving_line_detail"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "upper": { "type": "string" },
+        "lower": { "type": "string" },
+        "moving_line": { "type": "integer" },
+        "meaning": { "type": "string" },
+        "bias": { "type": "string" },
+        "stage": { "type": "string" },
+        "classic": { "type": "object", "additionalProperties": true },
+        "moving_line_detail": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "required": ["final_score", "direction", "confidence_pct", "risk_level", "breakdown"],
+      "additionalProperties": true,
+      "properties": {
+        "final_score": { "type": "number" },
+        "direction": { "type": "string" },
+        "confidence_pct": { "type": "integer" },
+        "risk_level": { "type": "string" },
+        "breakdown": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "sourceTrace": {
+      "type": "object",
+      "required": ["market", "news", "macro"],
+      "additionalProperties": false,
+      "properties": {
+        "market": { "$ref": "#/$defs/sourceItem" },
+        "news": { "$ref": "#/$defs/sourceItem" },
+        "macro": { "$ref": "#/$defs/sourceItem" }
+      }
+    },
+    "sourceItem": {
+      "type": "object",
+      "required": ["provider", "status", "field_coverage_pct", "missing_fields"],
+      "additionalProperties": true,
+      "properties": {
+        "provider": { "type": "string" },
+        "status": { "type": "string", "enum": ["success", "missing"] },
+        "field_coverage_pct": { "type": "number" },
+        "missing_fields": { "type": "array", "items": { "type": "string" } },
+        "error": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "data_source": "manual-example",
+  "trend": "up",
+  "ma5": 4.28,
+  "ma20": 4.12,
+  "ma60": 3.96,
+  "macd": 0.032,
+  "macd_dif": 0.041,
+  "macd_dea": 0.025,
+  "rsi6": 61.5,
+  "kdj_k": 63.2,
+  "kdj_d": 55.8,
+  "boll_position": "中轨上方",
+  "volume_ratio": 1.26,
+  "main_fund_inflow": 3200,
+  "northbound_inflow": 1800,
+  "sector_strength": 6.5,
+  "turnover_rate": 2.8,
+  "amount": 1850000000,
+  "change_pct": 1.42
+}

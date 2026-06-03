@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Tuple
 
 from .bagua import TRIGRAM_BY_NAME
+from .classic_text import classic_for_profile
 from .hexagrams import HEXAGRAM_PROFILES, lines_from_profile
 
 
@@ -49,8 +50,11 @@ def _count_by(items: Tuple[Dict[str, Any], ...], key: str) -> Dict[str, int]:
 def _reference_item(profile) -> Dict[str, Any]:
     upper = TRIGRAM_BY_NAME[profile.upper]
     lower = TRIGRAM_BY_NAME[profile.lower]
+    classic = classic_for_profile(profile)
     return {
         "name": profile.name,
+        "king_wen_number": classic["king_wen_number"],
+        "canon": classic["canon"],
         "upper": profile.upper,
         "lower": profile.lower,
         "upper_role": upper.market_role,
@@ -62,6 +66,7 @@ def _reference_item(profile) -> Dict[str, Any]:
         "stage_text": STAGE_TEXT.get(profile.stage, profile.stage),
         "lines": lines_from_profile(profile),
         "plain": _plain_text(profile, upper.market_role, lower.market_role),
+        "classic": classic,
     }
 
 

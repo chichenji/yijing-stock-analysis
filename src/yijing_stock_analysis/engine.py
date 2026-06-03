@@ -6,6 +6,7 @@ from typing import Any, Dict, Mapping
 from .bagua import TRIGRAM_BY_NAME, trigram_by_index
 from .cast import beijing_time, pick_casts, time_cast
 from .cast_trace import build_cast_trace
+from .classic_text import classic_for_profile, moving_line_detail
 from .data_sources import optional_macro_snapshot, optional_market_snapshot, optional_news_snapshot, resolve_source
 from .hexagrams import hexagram_profile_by_trigrams
 from .models import AnalysisInput, AnalysisResult, HexagramSnapshot, SourceTrace
@@ -13,6 +14,12 @@ from .relations import build_relation_set
 from .scoring import build_score_card
 from .stock_mapping import profile_hint
 from .wuxing import element_for_trigram, summarize
+
+EXPECTED_FIELDS = {
+    "market": ("trend", "ma5", "ma20", "ma60", "macd", "rsi6", "volume_ratio", "turnover_rate"),
+    "news": ("sentiment_index", "sentiment_class", "flow_score", "viral_k"),
+    "macro": ("macro_score", "macro_bias", "index_trend"),
+}
 
 
 class YijingStockEngine:
@@ -150,6 +157,8 @@ class YijingStockEngine:
         news = resolve_source(analysis_input.news)
         if news:
             return news
+        if analysis_input.pure_yijing:
+            return {}
         if self.news_source is not None:
             return resolve_source(self.news_source(analysis_input.normalized_ticker()))
         return optional_news_snapshot(analysis_input.normalized_ticker())
@@ -158,6 +167,8 @@ class YijingStockEngine:
         macro = resolve_source(analysis_input.macro)
         if macro:
             return macro
+        if analysis_input.pure_yijing:
+            return {}
         if self.macro_source is not None:
             return resolve_source(self.macro_source())
         return optional_macro_snapshot()
@@ -166,7 +177,18 @@ class YijingStockEngine:
         upper = TRIGRAM_BY_NAME[profile.upper]
         lower = TRIGRAM_BY_NAME[profile.lower]
         lines = lower.lines + upper.lines
-        return HexagramSnapshot(profile.name, upper.name, lower.name, moving_line, profile.meaning, profile.bias, profile.stage, lines)
+        return HexagramSnapshot(
+            profile.name,
+            upper.name,
+            lower.name,
+            moving_line,
+            profile.meaning,
+            profile.bias,
+            profile.stage,
+            lines,
+            classic_for_profile(profile),
+            moving_line_detail(moving_line),
+        )
 
     def _body_use(self, profile, moving_line: int) -> Dict[str, Any]:
         upper = TRIGRAM_BY_NAME[profile.upper]
@@ -197,26 +219,33 @@ class YijingStockEngine:
             confidence_label=scores["confidence_label"],
             risk_level=scores["risk_level"],
             suggestion=scores["suggestion"],
+            breakdown=scores.get("breakdown", {}),
         )
 
     def _source_trace(self, market, news, macro, analysis_input):
-        market_provider = "manual" if analysis_input.market else market.get("data_source", "missing")
-        news_provider = "manual" if analysis_input.news else news.get("data_source", "missing")
-        macro_provider = "manual" if analysis_input.macro else macro.get("data_source", "missing")
+        timestamp = analysis_input.as_of.strftime("%Y-%m-%d %H:%M:%S") if analysis_input.as_of else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return SourceTrace(
-            market={
-                "provider": market_provider,
-                "as_of": analysis_input.as_of.strftime("%Y-%m-%d %H:%M:%S") if analysis_input.as_of else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            },
-            news={
-                "provider": news_provider,
-                "as_of": analysis_input.as_of.strftime("%Y-%m-%d %H:%M:%S") if analysis_input.as_of else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            },
-            macro={
-                "provider": macro_provider,
-                "as_of": analysis_input.as_of.strftime("%Y-%m-%d %H:%M:%S") if analysis_input.as_of else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            },
+            market=self._trace_item("market", market, bool(analysis_input.market), timestamp),
+            news=self._trace_item("news", news, bool(analysis_input.news), timestamp),
+            macro=self._trace_item("macro", macro, bool(analysis_input.macro), timestamp),
         )
+
+    def _trace_item(self, kind: str, payload, manual: bool, timestamp: str) -> Dict[str, Any]:
+        expected = EXPECTED_FIELDS[kind]
+        present = tuple(field for field in expected if field in payload)
+        missing = tuple(field for field in expected if field not in payload)
+        provider = "manual" if manual else payload.get("data_source", "missing")
+        status = "success" if payload else "missing"
+        reason = "" if payload else "未获得数据：接口不可用、依赖缺失、网络异常或未提供手工 JSON。"
+        return {
+            "provider": provider,
+            "status": status,
+            "as_of": timestamp,
+            "field_coverage_pct": round(len(present) / len(expected) * 100, 1),
+            "present_fields": present,
+            "missing_fields": missing,
+            "error": reason,
+        }
 
     def _missing_fields(self, market, news, macro, analysis_input):
         missing = []

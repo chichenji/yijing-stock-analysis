@@ -31,13 +31,22 @@ def _append_dict_block(lines: list[str], title: str, payload: Mapping[str, Any])
 
 
 def _append_hexagram(lines: list[str], label: str, payload: Mapping[str, Any], result: Mapping[str, Any]) -> None:
+    classic = payload.get("classic", {})
+    line_detail = payload.get("moving_line_detail", {})
     lines.extend(
         [
             f"### {label}",
             f"- 卦名：{payload['name']}",
+            f"- 周易序号：{classic.get('king_wen_number', '未知')}（{classic.get('canon', '未知')}）",
             f"- 上卦：{payload['upper']}",
             f"- 下卦：{payload['lower']}",
             f"- 动爻：{payload['moving_line']}",
+            f"- 卦辞摘义：{classic.get('gua_ci_gist', '未提供')}",
+            f"- 象辞摘义：{classic.get('xiang_ci_gist', '未提供')}",
+            f"- 动爻爻位：{line_detail.get('position', '未知')}，{line_detail.get('meaning', '未提供')}",
+            f"- 动爻白话：{line_detail.get('stock_plain', '未提供')}",
+            f"- 确认信号：{line_detail.get('confirmation_signal', '未提供')}",
+            f"- 风险信号：{line_detail.get('risk_signal', '未提供')}",
             f"- 象意：{payload['meaning']}",
             f"- 断语短句：{hexagram_short_omen(label, payload)}",
             f"- 白话解释：{hexagram_plain_explanation(label, result, payload)}",
@@ -68,6 +77,21 @@ def _append_score_section(lines: list[str], result: Mapping[str, Any]) -> None:
             "",
         ]
     )
+    _append_score_breakdown(lines, scores)
+
+
+def _append_score_breakdown(lines: list[str], scores: Mapping[str, Any]) -> None:
+    breakdown = scores.get("breakdown", {})
+    if not breakdown:
+        return
+    lines.extend(["### 评分原因", f"- 公式：{breakdown.get('formula', '')}"])
+    for item in breakdown.get("components", ()):
+        lines.append(
+            f"- {item['name']}：分数 {item['score']}，权重 {item['weight']}%，贡献 {item['contribution']}"
+        )
+        for reason in item.get("reasons", ()):
+            lines.append(f"  - {reason}")
+    lines.append("")
 
 
 def _append_review_windows(lines: list[str], result: Mapping[str, Any]) -> None:
@@ -94,6 +118,7 @@ def render_markdown(result: Mapping[str, Any]) -> str:
 
 
 def _header_lines(result: Mapping[str, Any]) -> list[str]:
+    source = result["source_trace"]
     return [
         f"# 易经测股：{result['ticker']}",
         "",
@@ -109,12 +134,20 @@ def _header_lines(result: Mapping[str, Any]) -> list[str]:
         f"- 缺失字段：{', '.join(result.get('missing_fields', [])) or '无'}",
         "",
         "## 来源追踪",
-        f"- 行情源：{result['source_trace']['market'].get('provider', 'unknown')}",
-        f"- 新闻源：{result['source_trace']['news'].get('provider', 'unknown')}",
-        f"- 宏观源：{result['source_trace']['macro'].get('provider', 'unknown')}",
+        f"- 行情源：{_source_line(source['market'])}",
+        f"- 新闻源：{_source_line(source['news'])}",
+        f"- 宏观源：{_source_line(source['macro'])}",
         "",
         "## 卦象总览",
     ]
+
+
+def _source_line(payload: Mapping[str, Any]) -> str:
+    error = payload.get("error") or "无"
+    return (
+        f"{payload.get('provider', 'unknown')}，状态={payload.get('status', 'unknown')}，"
+        f"字段覆盖率={payload.get('field_coverage_pct', 0)}%，错误={error}"
+    )
 
 
 def _append_hexagrams(lines: list[str], result: Mapping[str, Any]) -> None:
@@ -159,14 +192,18 @@ def _append_hexagram_reference(lines: list[str]) -> None:
     _append_stats(lines, "阶段分布统计", stats["stage"])
     for item in hexagram_reference_items():
         lines.extend(
-            [
-                f"### {item['name']}",
-                f"- 上下卦：{item['upper']}上{item['lower']}下",
-                f"- 短语：{item['meaning']}",
-                f"- 白话：{item['plain']}",
-                f"- 倾向：{item['bias_text']}",
-                f"- 阶段：{item['stage_text']}",
-                "",
+        [
+            f"### {item['name']}",
+            f"- 周易序号：{item.get('king_wen_number', '未知')}（{item.get('canon', '未知')}）",
+            f"- 上下卦：{item['upper']}上{item['lower']}下",
+            f"- 卦辞摘义：{item['classic']['gua_ci_gist']}",
+            f"- 象辞摘义：{item['classic']['xiang_ci_gist']}",
+            f"- 短语：{item['meaning']}",
+            f"- 白话：{item['plain']}",
+            f"- 风险触发：{item['classic']['risk_trigger']}",
+            f"- 倾向：{item['bias_text']}",
+            f"- 阶段：{item['stage_text']}",
+            "",
             ]
         )
 
