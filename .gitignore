@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+boe_yijing_*_check.png
+stitch_screen_response.json
