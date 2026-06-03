@@ -3,4 +3,10 @@ __pycache__/
 .pytest_cache/
 node_modules/
 boe_yijing_*_check.png
+*_yijing_report.html
 stitch_screen_response.json
+stitch_yijing_design.*
+package.json
+package-lock.json
+scripts/start_stitch_mcp.ps1
+scripts/stitch_mcp_proxy.mjs
